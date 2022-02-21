@@ -35,7 +35,7 @@ This does a deploy of contract in the rinkeby network
 
 run `truffle migrate --network {network}`
 
-example: `truffle migrate --network rinkeby`
+example: `truffle migrate --network ropsten`
 
 ### Run project on test
 
@@ -46,4 +46,4 @@ Coming soon
 
 This command should run after
 
-run `truffle run verify GangNFT --network rinkeby`
+run `truffle run verify GangNFT --network ropsten`
