@@ -14,7 +14,7 @@ contract GangNFT is Ownable, ERC721URIStorage {
 
     string public baseTokenURI;
     string internal baseExtension = ".json";
-    string public hiddenMetadataUri;
+    string public hiddenMetadataURI;
     bool public isPreSale = true;
     bool public revealed = false;
     uint256 public saleCost = 0.02 ether;
@@ -23,10 +23,11 @@ contract GangNFT is Ownable, ERC721URIStorage {
     uint8 public firstDiscount = 50;
     uint8 public secondDiscount = 20;
 
-    constructor() ERC721("GangNFT", "GNF") {
-        setHiddenMetadataUri(
-            "ipfs://QmdNw2KZNrdWLYFhjqu9v4d2cRqRRy5wsD6cF7TPVSvz4q/_metadata.json"
-        );
+    constructor(string memory _hiddenMetadataURI, string memory _baseTokenURI)
+        ERC721("GangNFT", "GNF")
+    {
+        hiddenMetadataURI = _hiddenMetadataURI;
+        baseTokenURI = _baseTokenURI;
     }
 
     function validateDiscount(uint16 _discount, uint256 _tokenAmount) internal {
@@ -40,20 +41,21 @@ contract GangNFT is Ownable, ERC721URIStorage {
             "Cannot mint, send token amount"
         );
 
-        uint256 discountCalc = (saleCost * _discount) / 100;
-        uint256 saleCosttWithDiscount = saleCost - discountCalc;
+        uint256 totalCost = saleCost * _tokenAmount;
+        uint256 discountCalc = (totalCost * _discount) / 100;
+        uint256 saleCosttWithDiscount = totalCost - discountCalc;
 
         if (isPreSale) {
             require(
-                msg.value >= saleCosttWithDiscount * _tokenAmount,
+                msg.value == saleCosttWithDiscount,
+                "Not enough ether provided"
+            );
+        } else {
+            require(
+                msg.value == saleCost * _tokenAmount,
                 "Not enough ether provided"
             );
         }
-
-        require(
-            msg.value >= saleCost * _tokenAmount,
-            "Not enough ether provided"
-        );
     }
 
     function mint(
@@ -67,30 +69,15 @@ contract GangNFT is Ownable, ERC721URIStorage {
             _tokenIds.increment();
             uint256 newItemId = _tokenIds.current();
 
-            if (newItemId == 0) {
-                newItemId++;
-            }
-
             _safeMint(_to, newItemId);
-
-            _setTokenURI(
-                newItemId,
-                string(
-                    abi.encodePacked(
-                        baseTokenURI,
-                        newItemId.toString(),
-                        baseExtension
-                    )
-                )
-            );
         }
     }
 
-    function setHiddenMetadataUri(string memory _hiddenMetadataUri)
+    function setHiddenMetadataURI(string memory _hiddenMetadataURI)
         public
         onlyOwner
     {
-        hiddenMetadataUri = _hiddenMetadataUri;
+        hiddenMetadataURI = _hiddenMetadataURI;
     }
 
     function setRevealed(bool _revealed) public onlyOwner {
@@ -110,7 +97,7 @@ contract GangNFT is Ownable, ERC721URIStorage {
         );
 
         if (!revealed) {
-            return hiddenMetadataUri;
+            return hiddenMetadataURI;
         }
 
         string memory currentBaseURI = _baseURI();
